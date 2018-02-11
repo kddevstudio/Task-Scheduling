@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -18,5 +19,10 @@
   "homepage": "https://github.com/kddevstudio/Task-Scheduling#readme",
   "dependencies": {
     "typescript": "^2.7.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^22.1.2",
+    "jest": "^22.2.1",
+    "ts-jest": "^22.0.3"
   }
 }
