@@ -1,28 +1,27 @@
-export class Schedule{
-    constructor(start: Date | null, end: Date | null, duration: Number | null){
-        // check that there are at least two properties available
-        let nullArgCount = 0;
+import { StartOrEnd } from "../StartOrEnd";
+export class Schedule {
+    start: Date;
+    end: Date;
+    duration: number;
 
-        if(start == null) {
-            nullArgCount++;
-        }        
+    constructor(start: Date, end: Date | number);
+    constructor(param1: Date, param2: Date | number, param2Type?: StartOrEnd )
+    constructor(param1: Date, param2: Date | number, param2Type?: StartOrEnd ) {
+        if(param2 instanceof Date) {
+            this.start = param1;
+            this.end = param2;
+            this.duration = 1;
+        } else {
+            this.duration = param2;
 
-        if(end == null) {
-            nullArgCount++;
-        }
-
-        if(duration == null) {
-            nullArgCount++;
-        }
-
-        if(nullArgCount>1){
-            throw Error("Null Argument");
-        }
-    
-        if(start && end && duration){
-            // check values are congruent
-            if(duration !== (end.getTime() - start.getTime()) / (864000 * 1000)){
-                throw Error("Invalid Argument")
+            if (param2Type === StartOrEnd.End) {
+                this.end = param1;
+                this.start = new Date(this.end);
+                this.start.setDate(this.end.getDate() + this.duration);
+            } else {
+                this.start = param1;
+                this.end = new Date(this.start);
+                this.end.setDate(this.start.getDate() + this.duration);
             }
         }
     }

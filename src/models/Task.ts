@@ -1,8 +1,9 @@
-import {Schedule} from './Schedule';
+import { StartOrEnd } from "../StartOrEnd";
+import {Schedule} from "./Schedule";
 
-export class Task extends Schedule{
-    constructor(public name: string, public start: Date | null, public end: Date | null, public duration: Number | null){
-        super(start, end, duration);
+export class Task extends Schedule {
+    constructor(public name: string, scheduleDate: Date, scheduleParam2: Date | number, param2Type?: StartOrEnd ) {
+        super(scheduleDate, scheduleParam2, param2Type);
     }
 
     id: number = 0;

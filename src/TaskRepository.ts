@@ -1,4 +1,4 @@
-import { Task } from "src/models/Task";
+import { Task } from "./models/Task";
 import * as Ix from "ix";
 
 export class TaskRepository{
