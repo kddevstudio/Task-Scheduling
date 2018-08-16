@@ -10,14 +10,14 @@ export class Schedule {
         if(param2 instanceof Date) {
             this.start = param1;
             this.end = param2;
-            this.duration = 1;
+            this.duration = param2.getDate() - param1.getDate();
         } else {
             this.duration = param2;
 
             if (param2Type === StartOrEnd.End) {
                 this.end = param1;
                 this.start = new Date(this.end);
-                this.start.setDate(this.end.getDate() + this.duration);
+                this.start.setDate(this.end.getDate() - this.duration);
             } else {
                 this.start = param1;
                 this.end = new Date(this.start);
