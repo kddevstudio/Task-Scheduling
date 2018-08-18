@@ -12,20 +12,23 @@ export class Scheduler {
         this.taskRepository = taskRepository;
     }
 
-    move(task: Task, date: Date, startOrEnd: StartOrEnd = StartOrEnd.Start): Task {
-        var volatileTask: Task = this._move(task, date, startOrEnd);
-        return volatileTask;
+    move(task: Task, date: Date, startOrEnd: StartOrEnd = StartOrEnd.Start): TaskMoveResult  {
+        let taskMoveResult = this._move(task, date, startOrEnd);
+        return taskMoveResult;
     }
 
-    private _move(task: Task, date: Date, startOrEnd: StartOrEnd = StartOrEnd.Start): Task {
+    private _move(task: Task, date: Date, startOrEnd: StartOrEnd = StartOrEnd.Start): TaskMoveResult {
 
-        const volatileTask: Task = JSON.parse(JSON.stringify(task));
+        const volatileTask: Task = new Task(task.name, task.start, task.end);
+        let taskMoveResult: TaskMoveResult | null = null;
 
         // cannot move tasks with MustStart / MustEnd constraints
-        if(volatileTask.constraint) {
-            const constraint: Constraint = volatileTask.constraint;
+        if(task.constraint) {
+            const constraint: Constraint = task.constraint;
             if(constraint.constraintType === ConstraintType.MustStartOn || constraint.constraintType === ConstraintType.MustEndOn) {
-                throw Error("ConstraintViolation");
+                taskMoveResult = new TaskMoveResult(false, volatileTask, `Task cannot be moved`);
+                
+                //throw Error("ConstraintViolation");
             }
         }
 
@@ -49,28 +52,32 @@ export class Scheduler {
             switch(constraint.constraintType) {
                 case ConstraintType.MustStartBefore:
                 if(volatileTask.start >= constraint.date) {
-                    throw Error("ConstraintViolation");
+                    taskMoveResult = new TaskMoveResult(false, volatileTask, `Start date {volatileTask.start} succeeds MustStartBefore constraint {constraint.date}`);
                 }
                 break;
                 case ConstraintType.MustStartAfter:
                 if(volatileTask.start <= constraint.date) {
-                    throw Error("ConstraintViolation");
+                    taskMoveResult = new TaskMoveResult(false, volatileTask, `Start date {volatileTask.start} preceeds MustStartAfter constraint {constraint.date}`);
                 }
                 break;
                 case ConstraintType.MustEndBefore:
                 if(volatileTask.end >= constraint.date) {
-                    throw Error("ConstraintViolation");
+                    taskMoveResult = new TaskMoveResult(false, volatileTask, `End date {volatileTask.end} succeeds MustEndBefore constraint {constraint.date}`);
                 }
                 break;
                 case ConstraintType.MustEndAfter:
                 if(volatileTask.end <= constraint.date) {
-                    throw Error("ConstraintViolation");
+                    taskMoveResult = new TaskMoveResult(false, volatileTask, `End date {volatileTask.end} preceeds MustEndAfter constraint {constraint.date}`);
                 }
                 break;
             }
         }
 
-        return volatileTask;
+        if(!taskMoveResult){
+            taskMoveResult = new TaskMoveResult(true, volatileTask);
+        }
+
+        return taskMoveResult;
     }
 
     change(schedule: Task, change: Date | number, startOrEnd?: StartOrEnd): void {
@@ -94,3 +101,8 @@ export class Scheduler {
         }
     }
 }
+class TaskMoveResult {
+    constructor(public valid: boolean, public Task: Task, public message?: string) {
+    }
+}
+
