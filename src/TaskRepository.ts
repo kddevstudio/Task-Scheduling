@@ -1,14 +1,15 @@
 import { Task } from "./models/Task";
 import { Dependency }  from "./models/Dependency";
 import * as Ix from "ix";
+import { ITaskRepository } from "./ITaskRepository";
 
-export class TaskRepository {
+export class TaskRepository implements ITaskRepository {
     private taskEnumerable: Ix.Enumerable<Task>;
     private dependencyEnumerable: Ix.Enumerable<Dependency>;
 
     constructor(tasks: Array<Task>, dependencies: Array<Dependency>) {
         this.taskEnumerable = Ix.Enumerable.fromArray(tasks);
-        this.dependencyEnumerable = Ix.Enumerable.fromArray(dependencies);
+        this.dependencyEnumerable = dependencies ? Ix.Enumerable.fromArray(dependencies) : Ix.Enumerable.empty();
     }
 
     get(taskId: number): Task {
@@ -31,7 +32,11 @@ export class TaskRepository {
         return childTasks;
     }
 
-    getSuccessors(taskId: number): Ix.Enumerable<Dependency> {
+    getPredecessorDependencies(taskId: number): Ix.Enumerable<Dependency> {
+        return this.dependencyEnumerable.where(dependency => dependency.successorId === taskId);
+    }
+
+    getSuccessorDependencies(taskId: number): Ix.Enumerable<Dependency> {
         return this.dependencyEnumerable.where(dependency => dependency.predecessorId === taskId);
     }
 }
