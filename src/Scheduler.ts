@@ -144,23 +144,17 @@ export class Scheduler {
                 }
 
                 // capture change in date
-                // diff = schedule.start.getDate() - change.getDate();
                 schedule.start = change;
-                // schedule.duration += diff;
             } else {
                 if(change.getTime() === schedule.start.getTime()) {
                     throw new Error("Task cannot end on the same day that it starts");
                 }
 
                 // capture change in date
-                // diff = schedule.end.getDate() - change.getDate();
                 schedule.end = change;
-                // schedule.duration -= diff;
             }
         } else {
-            // diff = schedule.duration - change;
             schedule.duration = change;
-            // schedule.end.setDate(schedule.end.getDate() - diff);
         }
     }
 }

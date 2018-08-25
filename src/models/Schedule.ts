@@ -2,16 +2,20 @@ import { StartOrEnd } from "../StartOrEnd";
 export class Schedule {
     _start: Date;
     _end: Date;
-    _duration: number;
+    _duration: number = 0;
 
     constructor(start: Date, end: Date | number);
+    constructor(start: Date, end: Date | number, param1Type: StartOrEnd);
     constructor(param1: Date, param2: Date | number, param1Type: StartOrEnd = StartOrEnd.Start) {
         if(param2 instanceof Date) {
             // set private field, setters requires two known values
+
+            // set field to avoid computing duration until end is set
             this._start = param1;
             this.end = param2;
             // this.duration = param2.getDate() - param1.getDate();
         } else {
+            // set field to avoid computing duration until start or end is set
             this._duration = param2;
 
             if (param1Type === StartOrEnd.End) {

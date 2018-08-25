@@ -1,6 +1,7 @@
 import "ts-jest";
 import { Task } from "../src/models/Task";
 import {TaskRepository} from "../src/TaskRepository";
+import { Dependency } from "../src/models/Dependency";
 
 const tasks: Task[] = [];
 const duration: number = 1;
@@ -40,7 +41,7 @@ b2.id = 7;
 b2.parentId = 5;
 tasks.push(b2);
 
-const sut: TaskRepository = new TaskRepository(tasks);
+const sut: TaskRepository = new TaskRepository(tasks, new Array<Dependency>());
 
 describe("Task Repository get methods", () => {
 
