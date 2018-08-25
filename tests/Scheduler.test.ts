@@ -9,285 +9,279 @@ import { ITaskRepository } from "../src/ITaskRepository";
 import { TaskRepository } from "../src/TaskRepository";
 import { TaskActionSource } from "../src/TaskActionSource";
 
-let start: Date = new Date(2018, 7, 7);
+let start: Date = new Date(2018, 7, 8);
 let duration: number = 7;
 const task: Task = new Task("", start, duration);
 const taskRepository: ITaskRepository = new TaskRepository([task], null);
 const sut: Scheduler = new Scheduler(taskRepository);
 
-describe("Scheduler operations:", () => {
+describe("Constraint operations:", () => {
 
   beforeEach(() => {
-    task.start = new Date(2018, 7, 7);
-    task.duration = 7;
-    task.end = new Date(2018, 7, 14);
+    task.start = start;
+    task.duration = duration;
   });
 
-  test("move start", () => {
+  // mustStartBefore
+  describe("MustStartBefore:", () => {
 
-    let newStart: Date = new Date(start);
-    newStart.setDate(newStart.getDate() + duration);
+    // early
+    test("Early", () => {
+      task.name = "MustStartBefore";
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, task.start);
 
-    let expectedEnd: Date = new Date(newStart);
-    expectedEnd.setDate(expectedEnd.getDate() + duration);
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
 
-    let taskMoveResults: TaskMoveResult[] = sut.move(TaskActionSource.User, task, newStart);
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
-    expect(taskMoveResults[0].valid).toBe(true);
-    expect(taskMoveResults[0].task.start).toEqual(newStart);
-    expect(taskMoveResults[0].task.duration).toEqual(duration);
-    expect(taskMoveResults[0].task.end).toEqual(expectedEnd);
+      expect(taskMoveResult.valid).toBe(true);
+    });
+
+    // exact
+    test("Exact", () => {
+      task.name = "MustStartBefore";
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, task.start);
+
+      let schedule: Schedule = new Schedule(task.start, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // late
+    test("Late", () => {
+      task.name = "MustStartBefore";
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, task.start);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(15);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
   });
 
-  test("move end", () => {
-    var newEnd: Date = new Date(2018, 7, 21);
-    var expectedStart: Date = new Date(2018, 7, 14);
+  describe("MustStartOn:", () => {
 
-    var taskMoveResults: TaskMoveResult[] = sut.move(task, newEnd, StartOrEnd.End);
+    // early
+    test("Early", () => {
+      task.name = "MustStartOn";
+      task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
 
-    expect(taskMoveResults[0].valid).toBe(true);
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
 
-    expect(taskMoveResults[0].task.start).toEqual(expectedStart);
-    expect(taskMoveResults[0].task.duration).toEqual(duration);
-    expect(taskMoveResults[0].task.end).toEqual(newEnd);
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // exact
+    test("Exact", () => {
+      task.name = "MustStartOn";
+      task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
+
+      let schedule: Schedule = new Schedule(task.start, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(true);
+    });
+
+    // late
+    test("Late", () => {
+      task.name = "MustStartOn";
+      task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(15);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
   });
 
-  test("change start", () => {
-    var newStart: Date = new Date(2018, 7, 10);
+  // mustStartAfter
+  describe("MustStartAfter:", () => {
 
-    sut.change(task, newStart, StartOrEnd.Start);
+    // early
+    test("Early", () => {
+      task.name = "MustStartAfter";
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
 
-    expect(task.start).toEqual(newStart);
-    expect(task.duration).toEqual(4);
-    expect(task.end).toEqual(new Date(2018, 7, 14));
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // exact
+    test("Exact", () => {
+      task.name = "MustStartAfter";
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
+
+      let schedule: Schedule = new Schedule(task.start, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // late
+    test("Late", () => {
+      task.name = "MustStartAfter";
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(15);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(true);
+    });
   });
 
-  test("change start to end", () => {
-    var newStart: Date = new Date(2018, 7, 14);
+  // mustEndBefore
+  describe("MustEndBefore:", () => {
 
-    expect(() => { sut.change(task, newStart, StartOrEnd.Start); }).toThrowError("Task cannot start on the same day that it ends");
+    // early
+    test("Early", () => {
+      task.name = "MustEndBefore";
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, task.end);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(true);
+    });
+
+    // exact
+    test("Exact", () => {
+      task.name = "MustEndBefore";
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, task.end);
+
+      let schedule: Schedule = new Schedule(task.start, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // late
+    test("Late", () => {
+      task.name = "MustEndBefore";
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, task.end);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(15);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
   });
 
-  test("change end", () => {
-    var newEnd: Date = new Date(2018, 7, 21);
+  // mustEndOn
+  describe("MustEndOn:", () => {
 
-    sut.change(task, newEnd, StartOrEnd.End);
+    // early
+    test("Early", () => {
+      task.name = "MustEndOn";
+      task.constraint = new Constraint(ConstraintType.MustEndOn, task.end);
 
-    expect(task.start).toEqual(start);
-    expect(task.duration).toEqual(14);
-    expect(task.end).toEqual(newEnd);
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
+
+    // exact
+    test("Exact", () => {
+      task.name = "MustEndOn";
+      task.constraint = new Constraint(ConstraintType.MustEndOn, task.end);
+
+      let schedule: Schedule = new Schedule(task.start, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(true);
+    });
+
+    // late
+    test("Late", () => {
+      task.name = "MustEndOn";
+      task.constraint = new Constraint(ConstraintType.MustEndOn, task.end);
+
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(15);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
+
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
+
+      expect(taskMoveResult.valid).toBe(false);
+    });
   });
 
-  test("change end to start", () => {
-    var newStart: Date = new Date(2018, 7, 7);
+  // mustEndAfter
+  describe("MustEndAfter:", () => {
 
-    expect(() => {
-      sut.change(task, newStart, StartOrEnd.End);
-    }).toThrowError("Task cannot end on the same day that it starts");
-  });
+    // early
+    test("Early", () => {
+      task.name = "MustEndAfter";
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, task.end);
 
-  test("change duration", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
+      let newStart: Date = new Date(task.start);
+      newStart.setDate(1);
+      let schedule: Schedule = new Schedule(newStart, task.duration);
 
-    var task: Task = new Task("", start, end);
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
-    sut.change(task, 7);
+      expect(taskMoveResult.valid).toBe(false);
+    });
 
-    expect(task.start).toEqual(start);
-    expect(task.duration).toEqual(7);
-    expect(task.end).toEqual(new Date(2018, 8, 23));
-  });
+    // exact
+    test("Exact", () => {
+      task.name = "MustEndAfter";
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, task.end);
 
-  test("move start violating MustStartOn constraint", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
+      let schedule: Schedule = new Schedule(task.start, task.duration);
 
-    var task: Task = new Task("MustStartOnViolation", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 21));
+      expect(taskMoveResult.valid).toBe(false);
+    });
 
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
+    // late
+    test("Late", () => {
+      task.name = "MustEndAfter";
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, task.end);
 
-  test("move start violating MustEndOn constraint", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
+      let newEnd: Date = new Date(task.end);
+      newEnd.setDate(22);
+      let schedule: Schedule = new Schedule(newEnd, task.duration, StartOrEnd.End);
 
-    var task: Task = new Task("MustEndOnViolation", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndOn, task.start);
+      const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 21));
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end violating MustStartOn constraint", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartOnViolation", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 21), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end violating MustEndOn constraint", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndOnViolation", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndOn, task.start);
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 21), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move start before MustStartBefore constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartBefore, new Date(2018, 8, 25));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 21));
-
-    expect(taskMoveResults[0].valid).toBe(true);
-  });
-
-  test("move start to MustStartBefore constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartBefore, new Date(2018, 8, 25));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 25));
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move start after MustStartBefore constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartBefore, new Date(2018, 8, 25));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 26));
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move start after MustStartAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartAfter, new Date(2018, 8, 14));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 15));
-
-    expect(taskMoveResults[0].valid).toBe(true);
-  });
-
-  test("move start to MustStartAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartAfter, new Date(2018, 8, 14));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 14));
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move start before MustStartAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustStartAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustStartAfter, new Date(2018, 8, 14));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 13));
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end before MustEndBefore constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndBefore, new Date(2018, 8, 30));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 29), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(true);
-  });
-
-  test("move end to MustEndBefore constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndBefore, new Date(2018, 8, 30));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 30), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end after MustEndBefore constraint date", () => {
-    var start: Date = new Date(2018, 7, 16);
-    var end: Date = new Date(2018, 7, 28);
-
-    var task: Task = new Task("MustEndBefore", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndBefore, new Date(2018, 7, 30));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 7, 31), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end after MustEndAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndAfter, new Date(2018, 8, 26));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 27), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(true);
-  });
-
-  test("move end to MustEndAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndAfter, new Date(2018, 8, 26));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 26), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
-  });
-
-  test("move end before MustEndAfter constraint date", () => {
-    var start: Date = new Date(2018, 8, 16);
-    var end: Date = new Date(2018, 8, 28);
-
-    var task: Task = new Task("MustEndAfter", start, end);
-    task.constraint = new Constraint(ConstraintType.MustEndAfter, new Date(2018, 8, 26));
-
-    const taskMoveResults: TaskMoveResult[] = sut.move(task, new Date(2018, 8, 25), StartOrEnd.End);
-
-    expect(taskMoveResults[0].valid).toBe(false);
+      expect(taskMoveResult.valid).toBe(true);
+    });
   });
 });
