@@ -9,6 +9,7 @@ import { TaskActionSource } from "./TaskActionSource";
 import { ITaskRepository } from "./ITaskRepository";
 import { VolatileTaskRepository } from "./VolatileTaskRepository";
 import { Dependency } from "./models/Dependency";
+import * as Ix from "ix";
 
 export class Scheduler {
 
@@ -30,49 +31,71 @@ export class Scheduler {
                 let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
 
                 // tslint:disable-next-line:max-line-length
-                var minStartDate: Date = startPredecessors.select(dependency => volatileTaskRepository.get(dependency.predecessorId).end).max();
+                var minStartDate: Date | null = startPredecessors.any() ? startPredecessors.select(dependency => (volatileTaskRepository.get(dependency.predecessorId) as Task).end).min() : null;
                 // tslint:disable-next-line:max-line-length
-                var maxEndDate: Date = finishPredecessors.select(dependency => volatileTaskRepository.get(dependency.predecessorId).start).min();
+                var maxEndDate: Date | null = finishPredecessors.any() ? finishPredecessors.select(dependency => volatileTaskRepository.get(dependency.predecessorId).start).min() : null;
+
+                let taskMoveResult: TaskMoveResult | null = null;
 
                 // determine whether the task needs to be scheduled later
-                if(task.start < minStartDate) {
+                if(minStartDate && task.start < minStartDate) {
 
-                    // tslint:disable-next-line:max-line-length
-                    let taskMoveResult: TaskMoveResult = this.checkConstraint(task, new Schedule(minStartDate, task.duration));
+                    taskMoveResult = this.checkConstraint(task, new Schedule(minStartDate, task.duration));
 
                     if(!taskMoveResult.valid) {
                         reject(taskMoveResult);
                     }
-
-                    taskMoveResults.unshift(taskMoveResult);
                 }
 
                 // determine whether the task needs to be scheduled earlier
-                if(task.end < maxEndDate) {
+                if(maxEndDate && task.end < maxEndDate) {
 
-                    // tslint:disable-next-line:max-line-length
-                    let taskMoveResult: TaskMoveResult = this.checkConstraint(task, new Schedule(maxEndDate, task.duration, StartOrEnd.End));
+                    taskMoveResult = this.checkConstraint(task, new Schedule(maxEndDate, task.duration, StartOrEnd.End));
 
                     if(!taskMoveResult.valid) {
                         reject(taskMoveResult);
                     }
-
-                    taskMoveResults.unshift(taskMoveResult);
                 }
 
-                let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
-                let promiseArray: Promise<TaskMoveResult[]>[] = successorDependencies.select(dependency => {
-                    let successorTask: Task = volatileTaskRepository.get(dependency.successorId);
-                    return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
-                }).toArray();
+                if(taskMoveResult) {
+                    // append taskMoveResult to array of updated tasks
+                    taskMoveResults.unshift(taskMoveResult);
 
-                Promise.all(promiseArray).then(promiseArrayResults => {
-                    taskMoveResults.unshift.apply(null, promiseArrayResults);
-                    resolve(taskMoveResults);
-                });
+                    // cascade
+                    let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
+
+                    if(successorDependencies.any()) {
+                        let promiseArray: Promise<TaskMoveResult[]>[] = successorDependencies.select(dependency => {
+                            let successorTask: Task = volatileTaskRepository.get(dependency.successorId);
+                            return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
+                        }).toArray();
+
+                        Promise.all(promiseArray).then(promiseArrayResults => {
+                            // tslint:disable-next-line:max-line-length
+                            const promiseResultArray: TaskMoveResult[] = Ix.Enumerable.fromArray(promiseArrayResults).selectMany(function(promiseArrayResult){
+                                if(promiseArrayResult.length) {
+                                    return Ix.Enumerable.fromArray(promiseArrayResult);
+                                }
+                            }).toArray();
+
+                            if(promiseResultArray.length) {
+                                taskMoveResults.unshift.apply(null, promiseResultArray);
+                            }
+
+                            resolve(taskMoveResults);
+                        });
+                    }
+                    // tslint:disable-next-line:one-line
+                    else {
+                        resolve(taskMoveResults);
+                    }
+                }
+                // tslint:disable-next-line:one-line
+                else {
+                    // task does not need adjusted, return null
+                    resolve(new Array<TaskMoveResult>());
+                }
             }
-
-            resolve(taskMoveResults);
         });
     }
 

@@ -1,4 +1,7 @@
+
 import "ts-jest";
+import { Dependency } from "./../src/models/Dependency";
+import { DependencyType } from "./../src/DependencyType";
 import { Scheduler, TaskMoveResult } from "../src/Scheduler";
 import { Schedule } from "../src/models/Schedule";
 import { StartOrEnd } from "../src/StartOrEnd";
@@ -12,14 +15,22 @@ import { TaskActionSource } from "../src/TaskActionSource";
 let start: Date = new Date(2018, 7, 8);
 let duration: number = 7;
 const task: Task = new Task("", start, duration);
-const taskRepository: ITaskRepository = new TaskRepository([task], null);
-const sut: Scheduler = new Scheduler(taskRepository);
+
+let predecessor: Task = new Task("", start, duration);
+
+predecessor.id = 1;
+task.id = 2;
+
+let taskRepository: ITaskRepository | null;
+let sut: Scheduler | null;
 
 describe("Constraint operations:", () => {
 
   beforeEach(() => {
     task.start = start;
     task.duration = duration;
+    taskRepository = new TaskRepository([task], null);
+    sut = new Scheduler(taskRepository);
   });
 
   // mustStartBefore
@@ -66,6 +77,7 @@ describe("Constraint operations:", () => {
     });
   });
 
+  // mustStartOn
   describe("MustStartOn:", () => {
 
     // early
@@ -285,3 +297,28 @@ describe("Constraint operations:", () => {
     });
   });
 });
+
+describe("Dependency traversal:", () => {
+
+  beforeEach(() => {
+    task.start = start;
+    task.duration = duration;
+
+    let dependency: Dependency = new Dependency(1, 2, DependencyType.FinishStart);
+
+    taskRepository = new TaskRepository([predecessor, task], [dependency]);
+    sut = new Scheduler(taskRepository);
+  });
+
+  // task move according to predecessor, FS, no constraint
+  test("Successor-NoConstraint", async () => {
+    task.name = "Successor-NoConstraint";
+
+    const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+    console.log(taskMoveResults);
+
+    expect(taskMoveResults.length).toBe(2);
+  });
+});
+
