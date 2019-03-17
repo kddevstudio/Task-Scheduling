@@ -310,15 +310,363 @@ describe("Dependency traversal:", () => {
     sut = new Scheduler(taskRepository);
   });
 
-  // task move according to predecessor, FS, no constraint
-  test("Successor-NoConstraint", async () => {
-    task.name = "Successor-NoConstraint";
+  describe("No constraint", () => {
+    // task move according to predecessor, FS, no constraint
+    test("Successor-NoConstraint", async () => {
+      task.name = "Successor-NoConstraint";
 
-    const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
 
-    console.log(taskMoveResults);
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+  });
 
-    expect(taskMoveResults.length).toBe(2);
+  // mustStartBefore
+  describe("MustStartBefore:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustStartBefore";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(16);
+
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustStartBefore";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(15);
+
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
+
+      // use try/catch to capture rejected promises
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustStartBefore";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(14);
+
+      task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
+
+      // use try/catch to capture rejected promises
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+  });
+
+  // mustStartOn
+  describe("MustStartOn:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustStartOn";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(16);
+
+      task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustStartOn";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(15);
+
+      task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustStartOn";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(14);
+
+      task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+  });
+
+  // mustStartAfter
+  describe("MustStartAfter:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustStartAfter";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(16);
+
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustStartAfter";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(15);
+
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustStartAfter";
+      let constraintDate: Date = new Date(task.start);
+      constraintDate.setDate(14);
+
+      task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+  });
+
+  // mustEndBefore
+  describe("MustEndBefore:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustEndBefore";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(23);
+
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustEndBefore";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(22);
+
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
+
+      // use try/catch to capture rejected promises
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustEndBefore";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(21);
+
+      task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
+
+      // use try/catch to capture rejected promises
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+  });
+
+  // mustEndOn
+  describe("MustEndOn:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustEndOn";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(23);
+
+      task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustEndOn";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(22);
+
+      task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustEndOn";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(21);
+
+      task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+  });
+
+  // mustEndAfter
+  describe("MustEndAfter:", () => {
+
+    // early
+    test("Early", async () => {
+      task.name = "MustEndAfter";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(23);
+
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // exact
+    test("Exact", async () => {
+      task.name = "MustEndAfter";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(22);
+
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
+
+      try {
+        await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+      }
+      // tslint:disable-next-line:one-line
+      catch(taskMoveResults) {
+        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults[0].valid).toBe(false);
+        expect(taskMoveResults[1].valid).toBe(true);
+      }
+    });
+
+    // late
+    test("Late", async () => {
+      task.name = "MustEndAfter";
+      let constraintDate: Date = new Date(task.end);
+      constraintDate.setDate(21);
+
+      task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
+
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor, "")]);
+
+      expect(taskMoveResults.length).toBe(2);
+      expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[1].valid).toBe(true);
+    });
   });
 });
 

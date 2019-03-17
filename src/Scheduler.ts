@@ -39,55 +39,51 @@ export class Scheduler {
 
                 // determine whether the task needs to be scheduled later
                 if(minStartDate && task.start < minStartDate) {
-
                     taskMoveResult = this.checkConstraint(task, new Schedule(minStartDate, task.duration));
-
-                    if(!taskMoveResult.valid) {
-                        reject(taskMoveResult);
-                    }
                 }
 
                 // determine whether the task needs to be scheduled earlier
                 if(maxEndDate && task.end < maxEndDate) {
-
                     taskMoveResult = this.checkConstraint(task, new Schedule(maxEndDate, task.duration, StartOrEnd.End));
-
-                    if(!taskMoveResult.valid) {
-                        reject(taskMoveResult);
-                    }
                 }
 
                 if(taskMoveResult) {
                     // append taskMoveResult to array of updated tasks
                     taskMoveResults.unshift(taskMoveResult);
 
-                    // cascade
-                    let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
-
-                    if(successorDependencies.any()) {
-                        let promiseArray: Promise<TaskMoveResult[]>[] = successorDependencies.select(dependency => {
-                            let successorTask: Task = volatileTaskRepository.get(dependency.successorId);
-                            return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
-                        }).toArray();
-
-                        Promise.all(promiseArray).then(promiseArrayResults => {
-                            // tslint:disable-next-line:max-line-length
-                            const promiseResultArray: TaskMoveResult[] = Ix.Enumerable.fromArray(promiseArrayResults).selectMany(function(promiseArrayResult){
-                                if(promiseArrayResult.length) {
-                                    return Ix.Enumerable.fromArray(promiseArrayResult);
-                                }
-                            }).toArray();
-
-                            if(promiseResultArray.length) {
-                                taskMoveResults.unshift.apply(null, promiseResultArray);
-                            }
-
-                            resolve(taskMoveResults);
-                        });
+                    if(!taskMoveResult.valid) {
+                        reject(taskMoveResults);
                     }
                     // tslint:disable-next-line:one-line
                     else {
-                        resolve(taskMoveResults);
+                    // cascade
+                        let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
+
+                        if(successorDependencies.any()) {
+                            let promiseArray: Promise<TaskMoveResult[]>[] = successorDependencies.select(dependency => {
+                                let successorTask: Task = volatileTaskRepository.get(dependency.successorId);
+                                return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
+                            }).toArray();
+
+                            Promise.all(promiseArray).then(promiseArrayResults => {
+                                // tslint:disable-next-line:max-line-length
+                                const promiseResultArray: TaskMoveResult[] = Ix.Enumerable.fromArray(promiseArrayResults).selectMany(function(promiseArrayResult){
+                                    if(promiseArrayResult.length) {
+                                        return Ix.Enumerable.fromArray(promiseArrayResult);
+                                    }
+                                }).toArray();
+
+                                if(promiseResultArray.length) {
+                                    taskMoveResults.unshift.apply(null, promiseResultArray);
+                                }
+
+                                resolve(taskMoveResults);
+                            });
+                        }
+                        // tslint:disable-next-line:one-line
+                        else {
+                            resolve(taskMoveResults);
+                        }
                     }
                 }
                 // tslint:disable-next-line:one-line
@@ -109,7 +105,7 @@ export class Scheduler {
             const constraint: Constraint = task.constraint;
             switch(constraint.constraintType) {
                 case ConstraintType.MustStartOn:
-                    if(task.start.getTime() !== volatileTask.start.getTime()) {
+                    if(constraint.date.getTime() !== volatileTask.start.getTime()) {
                         // todo: supply better error message
                         // tslint:disable-next-line:max-line-length
                         let message: string = `Task {volatileTask.name} would start on {volatileTask.start} but must start on {constraint.date}`;
@@ -117,7 +113,7 @@ export class Scheduler {
                     }
                 break;
                 case ConstraintType.MustEndOn:
-                    if(task.end.getTime() !== volatileTask.end.getTime()) {
+                    if(constraint.date.getTime() !== volatileTask.end.getTime()) {
                         // todo: supply better error message
                         // tslint:disable-next-line:max-line-length
                         let message: string = `Task {volatileTask.name} would end on {volatileTask.end} but must start on {constraint.date}`;
