@@ -42,7 +42,12 @@ export class Schedule {
 
     set end(value: Date) {
         this._end = value;
-        this._duration = (this.end.getTime() - this.start.getTime()) / (86400 * 1000);
+        if(this._end > this._start){
+            this._duration = (this.end.getTime() - this.start.getTime()) / (86400 * 1000);
+        }
+        else{
+            this._start = new Date(this.end.getTime() - this._duration * 86400 * 1000);
+        }
     }
 
     get duration(): number {

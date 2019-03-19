@@ -31,9 +31,16 @@ export class Scheduler {
                 let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
 
                 // tslint:disable-next-line:max-line-length
-                var minStartDate: Date | null = startPredecessors.any() ? startPredecessors.select(dependency => (volatileTaskRepository.get(dependency.predecessorId) as Task).end).min() : null;
+                var minStartDate: Date | null = startPredecessors.any() ? startPredecessors.select(dependency => {
+                    let predecessorTask = volatileTaskRepository.get(dependency.predecessorId);
+                    return dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start;
+                }).max() : null;
+                
                 // tslint:disable-next-line:max-line-length
-                var maxEndDate: Date | null = finishPredecessors.any() ? finishPredecessors.select(dependency => volatileTaskRepository.get(dependency.predecessorId).start).min() : null;
+                var maxEndDate: Date | null = finishPredecessors.any() ? finishPredecessors.select(dependency => {
+                    let predecessorTask = volatileTaskRepository.get(dependency.predecessorId);
+                    return dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start;
+                }).min() : null;
 
                 let taskMoveResult: TaskMoveResult | null = null;
 
@@ -43,7 +50,7 @@ export class Scheduler {
                 }
 
                 // determine whether the task needs to be scheduled earlier
-                if(maxEndDate && task.end < maxEndDate) {
+                if(maxEndDate && task.end > maxEndDate) {
                     taskMoveResult = this.checkConstraint(task, new Schedule(maxEndDate, task.duration, StartOrEnd.End));
                 }
 
