@@ -324,7 +324,12 @@ describe("Dependency traversal:", () => {
       const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
 
       expect(taskMoveResults.length).toBe(2);
+      
       expect(taskMoveResults[0].valid).toBe(true);
+      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+      expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+      
       expect(taskMoveResults[1].valid).toBe(true);
     });
 
@@ -342,8 +347,13 @@ describe("Dependency traversal:", () => {
         const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
 
         expect(taskMoveResults.length).toBe(2);
+        
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exact
@@ -363,6 +373,11 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+  
         }
       });
 
@@ -383,6 +398,11 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+  
         }
       });
     });
@@ -406,6 +426,11 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+  
         }
       });
 
@@ -422,6 +447,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // late
@@ -440,6 +469,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -463,6 +496,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -482,6 +519,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -498,6 +539,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
 
@@ -517,6 +562,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -536,6 +585,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -556,6 +609,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -579,6 +636,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -595,6 +656,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -613,6 +678,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -636,6 +705,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -655,6 +728,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -671,6 +748,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
   });
@@ -700,6 +781,10 @@ describe("Dependency traversal:", () => {
       expect(taskMoveResults.length).toBe(2);
       expect(taskMoveResults[0].valid).toBe(true);
       expect(taskMoveResults[1].valid).toBe(true);
+
+      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+      expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
     });
 
     // mustStartBefore
@@ -718,6 +803,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -737,6 +826,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -757,6 +850,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -780,6 +877,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -796,6 +897,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -814,6 +919,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -837,6 +946,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -856,6 +969,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -872,6 +989,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
 
@@ -891,6 +1012,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -910,6 +1035,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -930,6 +1059,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -953,6 +1086,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -969,6 +1106,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -987,7 +1128,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
-        }
+          
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
 
@@ -1010,6 +1154,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1029,6 +1177,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1045,6 +1197,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
   });
@@ -1073,6 +1229,10 @@ describe("Dependency traversal:", () => {
       expect(taskMoveResults.length).toBe(2);
       expect(taskMoveResults[0].valid).toBe(true);
       expect(taskMoveResults[1].valid).toBe(true);
+
+      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+      expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
     });
 
     // mustStartBefore
@@ -1091,6 +1251,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -1110,6 +1274,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1130,6 +1298,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1153,6 +1325,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1169,6 +1345,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -1187,6 +1367,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1210,6 +1394,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1229,6 +1417,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1245,6 +1437,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
 
@@ -1264,6 +1460,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -1283,6 +1483,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1303,6 +1507,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1326,6 +1534,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1342,6 +1554,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -1360,6 +1576,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1383,6 +1603,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1402,6 +1626,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1418,6 +1646,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
   });
@@ -1445,6 +1677,10 @@ describe("Dependency traversal:", () => {
       expect(taskMoveResults.length).toBe(2);
       expect(taskMoveResults[0].valid).toBe(true);
       expect(taskMoveResults[1].valid).toBe(true);
+
+      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+      expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
     });
 
     // mustStartBefore
@@ -1463,6 +1699,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -1482,6 +1722,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1502,6 +1746,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1525,6 +1773,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1541,6 +1793,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -1559,6 +1815,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1582,6 +1842,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1601,6 +1865,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1617,6 +1885,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
 
@@ -1636,6 +1908,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // exactly constraint
@@ -1655,6 +1931,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1675,6 +1955,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1698,6 +1982,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1714,6 +2002,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
       // later than constraint
@@ -1732,6 +2024,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
     });
@@ -1755,6 +2051,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1774,6 +2074,10 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults.length).toBe(2);
           expect(taskMoveResults[0].valid).toBe(false);
           expect(taskMoveResults[1].valid).toBe(true);
+
+          expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+          expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+          expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
         }
       });
 
@@ -1790,6 +2094,10 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults.length).toBe(2);
         expect(taskMoveResults[0].valid).toBe(true);
         expect(taskMoveResults[1].valid).toBe(true);
+
+        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
   });
