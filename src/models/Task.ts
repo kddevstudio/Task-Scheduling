@@ -5,7 +5,7 @@ import { Constraint } from "./Constraint";
 export class Task extends Schedule {
 
     id: number = 0;
-    parentId: number = 0;
+    parentId: number | null = null;
     childTasks: Array<Task> = new Array<Task>();
     constraint: Constraint | null = null;
 

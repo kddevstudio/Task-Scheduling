@@ -1,7 +1,7 @@
 
 import "ts-jest";
-import { Dependency } from "./../src/models/Dependency";
-import { DependencyType } from "./../src/DependencyType";
+import { Dependency } from "../src/models/Dependency";
+import { DependencyType } from "../src/DependencyType";
 import { Scheduler, TaskMoveResult } from "../src/Scheduler";
 import { Schedule } from "../src/models/Schedule";
 import { StartOrEnd } from "../src/StartOrEnd";
@@ -12,7 +12,7 @@ import { ITaskRepository } from "../src/ITaskRepository";
 import { TaskRepository } from "../src/TaskRepository";
 import { TaskActionSource } from "../src/TaskActionSource";
 
-let start: Date = new Date(2018, 7, 15);
+let start: Date = new Date(2018, 10, 15);
 let duration: number = 4;
 const task: Task = new Task("", start, duration);
 
@@ -43,6 +43,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.start.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -55,6 +56,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -69,6 +71,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 
@@ -87,6 +90,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -99,6 +103,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.start.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -113,6 +118,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 
@@ -131,6 +137,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -143,6 +150,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.start.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -157,6 +165,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.start.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 
@@ -175,6 +184,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.end.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -187,6 +197,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -201,6 +212,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 
@@ -219,6 +231,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toBeLessThan(task.constraint.date.getTime());      
     });
 
     // exact
@@ -231,6 +244,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.end.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -245,6 +259,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 
@@ -263,6 +278,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -275,6 +291,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
+      expect(taskMoveResult.task.end.getTime()).toEqual(task.constraint.date.getTime());
     });
 
     // late
@@ -289,6 +306,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(true);
+      expect(taskMoveResult.task.end.getTime()).toBeGreaterThan(task.constraint.date.getTime());
     });
   });
 });
@@ -298,7 +316,7 @@ describe("Dependency traversal:", () => {
   task.start = start;
   task.duration = duration;
 
-  let predecessor1: Task = new Task("", new Date(2018, 7, 15), duration);
+  let predecessor1: Task = new Task("", new Date(2018, 10, 15), duration);
   let predecessor2: Task = new Task("", start, duration);
 
   predecessor1.id = 1;
@@ -1132,7 +1150,9 @@ describe("Dependency traversal:", () => {
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+        };
       });
+
     });
 
     // mustEndAfter
@@ -1690,7 +1710,7 @@ describe("Dependency traversal:", () => {
       test("Early", async () => {
         task.name = "MustStartBefore";
         let constraintDate: Date = new Date(task.start);
-        constraintDate.setDate(12);
+        constraintDate.setDate(20);
 
         task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
 
@@ -1970,7 +1990,7 @@ describe("Dependency traversal:", () => {
       test("Early", async () => {
         task.name = "MustEndOn";
         let constraintDate: Date = new Date(task.end);
-        constraintDate.setDate(16);
+        constraintDate.setDate(14);
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
@@ -2004,7 +2024,7 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
-        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(),15));
         expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
@@ -2012,7 +2032,7 @@ describe("Dependency traversal:", () => {
       test("Late", async () => {
         task.name = "MustEndOn";
         let constraintDate: Date = new Date(task.end);
-        constraintDate.setDate(18);
+        constraintDate.setDate(16);
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
@@ -2039,7 +2059,7 @@ describe("Dependency traversal:", () => {
       test("Early", async () => {
         task.name = "MustEndAfter";
         let constraintDate: Date = new Date(task.end);
-        constraintDate.setDate(16);
+        constraintDate.setDate(14);
 
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 

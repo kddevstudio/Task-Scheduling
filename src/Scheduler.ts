@@ -3,7 +3,6 @@ import { Task } from "./models/Task";
 import { Schedule } from "./models/Schedule";
 import { Constraint } from "./models/Constraint";
 import { ConstraintType } from "./ConstraintType";
-import { TaskRepository } from "./TaskRepository";
 import { DependencyType } from "./DependencyType";
 import { TaskActionSource } from "./TaskActionSource";
 import { ITaskRepository } from "./ITaskRepository";
@@ -18,11 +17,21 @@ export class Scheduler {
     // tslint:disable-next-line:max-line-length
     move(sender: TaskActionSource = TaskActionSource.User, task: Task, taskMoveResults: TaskMoveResult[] ): Promise<TaskMoveResult[]> {
 
+        let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
+
         return new Promise((resolve, reject) => {
 
+            
             // tslint:disable-next-line:max-line-length
             let predecessorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getPredecessorDependencies(task.id);
             // tslint:disable-next-line:max-line-length
+            
+            // let startDates: Date[] = []; 
+            // let endDates: Date[] = [];
+
+            let maxStartDate: Date | null = null;
+            let minEndDate: Date | null = null;
+
             if(predecessorDependencies.any()) {
                 // tslint:disable-next-line:max-line-length
                 let startPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.where(dependency => dependency.type === DependencyType.FinishStart || dependency.type === DependencyType.StartStart);
@@ -31,80 +40,101 @@ export class Scheduler {
                 let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
 
                 // tslint:disable-next-line:max-line-length
-                var minStartDate: Date | null = startPredecessors.any() ? startPredecessors.select(dependency => {
-                    let predecessorTask = volatileTaskRepository.get(dependency.predecessorId);
-                    return dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start;
-                }).max() : null;
+                if(startPredecessors.any()) {
+                    maxStartDate = startPredecessors.select(dependency => {
+                        let predecessorTask: Task | null = volatileTaskRepository.get(dependency.predecessorId);
+                        return predecessorTask ? dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start : null;
+                    }).max();
+                }
                 
                 // tslint:disable-next-line:max-line-length
-                var maxEndDate: Date | null = finishPredecessors.any() ? finishPredecessors.select(dependency => {
-                    let predecessorTask = volatileTaskRepository.get(dependency.predecessorId);
-                    return dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start;
-                }).min() : null;
-
-                let taskMoveResult: TaskMoveResult | null = null;
-
-                // determine whether the task needs to be scheduled later
-                if(minStartDate && task.start < minStartDate) {
-                    taskMoveResult = this.checkConstraint(task, new Schedule(minStartDate, task.duration));
+                if(finishPredecessors.any()) {
+                    minEndDate = finishPredecessors.select(dependency => {
+                        let predecessorTask: Task | null = volatileTaskRepository.get(dependency.predecessorId);
+                        return predecessorTask ? dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start : null;
+                    }).min();
                 }
+            }
 
-                // determine whether the task needs to be scheduled earlier
-                if(maxEndDate && task.end > maxEndDate) {
-                    taskMoveResult = this.checkConstraint(task, new Schedule(maxEndDate, task.duration, StartOrEnd.End));
-                }
+            let taskMoveResult: TaskMoveResult | null = null;
 
-                if(taskMoveResult) {
-                    // append taskMoveResult to array of updated tasks
-                    taskMoveResults.unshift(taskMoveResult);
+            // determine whether the task needs to be scheduled later
+            if(maxStartDate) {
+                taskMoveResult = this.checkConstraint(task, new Schedule(maxStartDate, task.duration));
+            }
 
-                    if(!taskMoveResult.valid) {
-                        reject(taskMoveResults);
-                    }
-                    // tslint:disable-next-line:one-line
-                    else {
-                    // cascade
-                        let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
+            // determine whether the task needs to be scheduled earlier
+            if(minEndDate) {
+                taskMoveResult = this.checkConstraint(task, new Schedule(minEndDate, task.duration, StartOrEnd.End));
+            }
 
-                        if(successorDependencies.any()) {
-                            let promiseArray: Promise<TaskMoveResult[]>[] = successorDependencies.select(dependency => {
-                                let successorTask: Task = volatileTaskRepository.get(dependency.successorId);
-                                return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
-                            }).toArray();
+            let promisesArray: Array<Promise<TaskMoveResult[]>> = [];
 
-                            Promise.all(promiseArray).then(promiseArrayResults => {
-                                // tslint:disable-next-line:max-line-length
-                                const promiseResultArray: TaskMoveResult[] = Ix.Enumerable.fromArray(promiseArrayResults).selectMany(function(promiseArrayResult){
-                                    if(promiseArrayResult.length) {
-                                        return Ix.Enumerable.fromArray(promiseArrayResult);
-                                    }
-                                }).toArray();
+            if(taskMoveResult) {
+                // append taskMoveResult to array of updated tasks
+                taskMoveResults.unshift(taskMoveResult);
 
-                                if(promiseResultArray.length) {
-                                    taskMoveResults.unshift.apply(null, promiseResultArray);
-                                }
-
-                                resolve(taskMoveResults);
-                            });
-                        }
-                        // tslint:disable-next-line:one-line
-                        else {
-                            resolve(taskMoveResults);
-                        }
-                    }
+                if(!taskMoveResult.valid) {
+                    reject(taskMoveResults);
                 }
                 // tslint:disable-next-line:one-line
                 else {
-                    // task does not need adjusted, return null
-                    resolve(new Array<TaskMoveResult>());
+                    // cascade
+                                        
+                    // dependencies
+                    let successorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getSuccessorDependencies(task.id);
+
+                    if(successorDependencies.any()) {
+                        let dependencyPromiseArray: Promise<TaskMoveResult[]>[] = successorDependencies
+                        .select(dependency => {
+                            let successorTask: Task = <Task>volatileTaskRepository.get(dependency.successorId);
+                            return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
+                        }).toArray();
+
+                        promisesArray.unshift.apply(null, dependencyPromiseArray);
+                    }
+
+                    // check all returned taskMoveResults
+                    Promise.all(promisesArray).then(promiseArrayResults => {
+                        // tslint:disable-next-line:max-line-length
+                        const promiseResultArray: TaskMoveResult[] = Ix.Enumerable.fromArray(promiseArrayResults).selectMany(promiseArrayResult => {
+                            if(promiseArrayResult.length) {
+                                return Ix.Enumerable.fromArray(promiseArrayResult);
+                            }
+                            return Ix.Enumerable.fromArray(Array<TaskMoveResult>());
+                        }).toArray();
+
+                        if(promiseResultArray && promiseResultArray.length) {
+                            //taskMoveResults.unshift.apply(null, promiseResultArray);
+                            promiseResultArray.forEach(newTaskMoveResult => {
+                                let taskMoveResultIndex = taskMoveResults.indexOf(taskMoveResults.filter(currentTaskMoveResult => currentTaskMoveResult.task.id === newTaskMoveResult.task.id)[0]);
+                                if(taskMoveResultIndex === -1){
+                                    taskMoveResults.unshift(newTaskMoveResult);
+                                }
+                                else{
+                                    taskMoveResults.splice(taskMoveResultIndex, 1, newTaskMoveResult);
+                                }
+                            });
+                        }
+
+                        resolve(taskMoveResults);
+                    });
                 }
+            }
+            // tslint:disable-next-line:one-line
+            else {
+                resolve(taskMoveResults);
             }
         });
     }
 
     checkConstraint(task: Task, schedule: Schedule): TaskMoveResult {
 
-        const volatileTask: Task = new Task(task.name, schedule.start, schedule.end);
+        let volatileTask: Task = new Task(task.name, task.start, task.end);
+        Object.assign(volatileTask, schedule);
+
+        // copy all other 'own' properties of task to volatileTask
+        
         let taskMoveResult: TaskMoveResult | null = null;
 
         // cannot move tasks with MustStart / MustEnd constraints

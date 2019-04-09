@@ -3,6 +3,7 @@ import { Dependency }  from "./models/Dependency";
 import * as Ix from "ix";
 import { ITaskRepository } from "./ITaskRepository";
 import { TaskMoveResult } from "./Scheduler";
+import { tsTypeAliasDeclaration } from "@babel/types";
 
 export class VolatileTaskRepository implements ITaskRepository {
     volatileTaskEnumerable: Ix.Enumerable<Task>;
@@ -11,8 +12,8 @@ export class VolatileTaskRepository implements ITaskRepository {
         this.volatileTaskEnumerable = Ix.Enumerable.fromArray(taskMoveResults).select(taskMoveResult => taskMoveResult.task);
     }
 
-    public get(taskId: number): Task {
-        let task: Task = <Task>this.volatileTaskEnumerable.where(task => task.id === taskId).firstOrDefault();
+    public get(taskId: number): Task | null {
+        let task: Task | null = <Task>this.volatileTaskEnumerable.where(task => task.id === taskId).firstOrDefault();
 
         if(!task) {
             task = this.taskRepository.get(taskId);
@@ -21,17 +22,26 @@ export class VolatileTaskRepository implements ITaskRepository {
         return task;
     }
 
-    public getParent(taskId: number): Task {
-        return this.get(this.get(taskId).parentId);
+    public hasTask(taskId: number){
+        return this.volatileTaskEnumerable.any(task => task.id === taskId);      
+    }
+
+    public getParent(taskId: number): Task | null {
+        
+        let task = this.get(taskId);
+        let parent = null;
+        
+        if(task && task.parentId){
+            parent = this.get(task.parentId);
+        }
+
+        return parent;
     }
 
     public children(taskId: number): Ix.Enumerable<Task> {
-        return this.volatileTaskEnumerable.where(task => task.parentId === taskId)
-        .join(this.taskRepository.children(taskId),
-            volatileTask => volatileTask.id,
-            task => task.id,
-            (volatileTask, task) => volatileTask || task);
-    }
+        let childTasks = this.taskRepository.children(taskId);
+        return childTasks.select(childTask => this.volatileTaskEnumerable.firstOrDefault(vtask => vtask.id == childTask.id) || childTask);
+        }
 
     public allChildren(taskId: number): Ix.Enumerable<Task> {
         let childTasks: Ix.Enumerable<Task> = this.children(taskId);

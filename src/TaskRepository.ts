@@ -12,12 +12,21 @@ export class TaskRepository implements ITaskRepository {
         this.dependencyEnumerable = dependencies ? Ix.Enumerable.fromArray(dependencies) : Ix.Enumerable.empty();
     }
 
-    public get(taskId: number): Task {
+    public tasks(): Ix.Enumerable<Task> {
+        return this.taskEnumerable;
+    }
+    
+    public get(taskId: number): Task | null {
         return this.taskEnumerable.where(task => task.id === taskId).firstOrDefault();
     }
 
-    public getParent(taskId: number): Task {
-        return this.get(this.get(taskId).parentId);
+    public getParent(taskId: number): Task | null {
+        let task = this.get(taskId);
+        let parentTask: Task | null = null;
+        if(task && task.parentId){
+            parentTask = this.get(task.parentId);
+        }
+        return parentTask;
     }
 
     public children(taskId: number): Ix.Enumerable<Task> {
