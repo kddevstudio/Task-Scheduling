@@ -12,23 +12,25 @@ import * as Ix from "ix";
 
 export class Scheduler {
 
-    constructor(private taskRepository: ITaskRepository) { }
+    private volatileTaskRepository: VolatileTaskRepository;
+    
+    constructor(private taskRepository: ITaskRepository) {
+        this.volatileTaskRepository = new VolatileTaskRepository(this.taskRepository);
+    }
 
     // tslint:disable-next-line:max-line-length
     move(sender: TaskActionSource = TaskActionSource.User, task: Task, taskMoveResults: TaskMoveResult[] ): Promise<TaskMoveResult[]> {
 
-        let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
-
+        if(taskMoveResults.length){
+            this.volatileTaskRepository.addRange(taskMoveResults);
+        }
+                
         return new Promise((resolve, reject) => {
-
             
             // tslint:disable-next-line:max-line-length
             let predecessorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getPredecessorDependencies(task.id);
             // tslint:disable-next-line:max-line-length
             
-            // let startDates: Date[] = []; 
-            // let endDates: Date[] = [];
-
             let maxStartDate: Date | null = null;
             let minEndDate: Date | null = null;
 
@@ -37,12 +39,12 @@ export class Scheduler {
                 let startPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.where(dependency => dependency.type === DependencyType.FinishStart || dependency.type === DependencyType.StartStart);
                 let finishPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.except(startPredecessors);
 
-                let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
+                //let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
 
                 // tslint:disable-next-line:max-line-length
                 if(startPredecessors.any()) {
                     maxStartDate = startPredecessors.select(dependency => {
-                        let predecessorTask: Task | null = volatileTaskRepository.get(dependency.predecessorId);
+                        let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
                         return predecessorTask ? dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start : null;
                     }).max();
                 }
@@ -50,7 +52,7 @@ export class Scheduler {
                 // tslint:disable-next-line:max-line-length
                 if(finishPredecessors.any()) {
                     minEndDate = finishPredecessors.select(dependency => {
-                        let predecessorTask: Task | null = volatileTaskRepository.get(dependency.predecessorId);
+                        let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
                         return predecessorTask ? dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start : null;
                     }).min();
                 }
@@ -87,7 +89,7 @@ export class Scheduler {
                     if(successorDependencies.any()) {
                         let dependencyPromiseArray: Promise<TaskMoveResult[]>[] = successorDependencies
                         .select(dependency => {
-                            let successorTask: Task = <Task>volatileTaskRepository.get(dependency.successorId);
+                            let successorTask: Task = <Task>this.volatileTaskRepository.get(dependency.successorId);
                             return this.move(TaskActionSource.Predecessor, successorTask, taskMoveResults);
                         }).toArray();
 

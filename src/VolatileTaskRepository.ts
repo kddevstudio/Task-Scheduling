@@ -6,10 +6,31 @@ import { TaskMoveResult } from "./Scheduler";
 import { tsTypeAliasDeclaration } from "@babel/types";
 
 export class VolatileTaskRepository implements ITaskRepository {
-    volatileTaskEnumerable: Ix.Enumerable<Task>;
+    
+    private volatileTaskEnumerable: Ix.Enumerable<Task>;
+    private taskMoveResultIndexMap: any = {};
+    private taskMoveResults: TaskMoveResult[] = new Array<TaskMoveResult>();
 
-    constructor(private taskRepository: ITaskRepository, private taskMoveResults: TaskMoveResult[]) {
-        this.volatileTaskEnumerable = Ix.Enumerable.fromArray(taskMoveResults).select(taskMoveResult => taskMoveResult.task);
+    constructor(private taskRepository: ITaskRepository) {
+        this.volatileTaskEnumerable = Ix.Enumerable.fromArray(this.taskMoveResults).select(taskMoveResult => taskMoveResult.task);
+    }
+   
+    public addRange(taskMoveResults: TaskMoveResult[])
+    {
+        taskMoveResults.forEach(taskMoveResult => this.add(taskMoveResult));
+    }
+
+    private add(taskMoveResult: TaskMoveResult)
+    {
+        let taskMoveResultIndex = this.taskMoveResultIndexMap[taskMoveResult.task.id];
+
+        if(taskMoveResultIndex){
+            this.taskMoveResults[taskMoveResultIndex] = taskMoveResult
+        }
+        else{
+            taskMoveResultIndex = this.taskMoveResults.push(taskMoveResult);
+            this.taskMoveResultIndexMap[taskMoveResult.task.id] = taskMoveResultIndex;
+        }
     }
 
     public get(taskId: number): Task | null {
