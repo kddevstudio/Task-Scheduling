@@ -11,6 +11,7 @@ import { Constraint } from "../src/models/Constraint";
 import { ITaskRepository } from "../src/ITaskRepository";
 import { TaskRepository } from "../src/TaskRepository";
 import { TaskActionSource } from "../src/TaskActionSource";
+import { catchClause } from "@babel/types";
 
 let start: Date = new Date(2018, 10, 15);
 let duration: number = 4;
@@ -2120,5 +2121,46 @@ describe("Dependency traversal:", () => {
         expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
     });
+  });
+});
+
+describe("woo", () => {
+
+  task.start = start;
+  task.duration = duration;
+
+  let predecessor1: Task = new Task("", new Date(2018, 10, 16), duration);
+  let predecessor2: Task = new Task("", start, duration);
+
+  predecessor1.id = 1;
+  predecessor2.id = 2;
+  task.id = 3;
+
+  beforeEach(() => {
+
+    let dependency1: Dependency = new Dependency(1, 3, DependencyType.StartStart);
+    let dependency2: Dependency = new Dependency(2, 3, DependencyType.FinishFinish);
+
+    taskRepository = new TaskRepository([predecessor1, predecessor2, task], [dependency1, dependency2]);
+    sut = new Scheduler(taskRepository);
+
+  });
+
+  test("", async () => {
+    task.name = "";
+
+    try{
+      await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+    }
+    catch(taskMoveResults){
+      expect(taskMoveResults.length).toBe(2);
+    
+      expect(taskMoveResults[0].valid).toBe(false);
+      // expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
+      // expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+      // expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
+      
+      // expect(taskMoveResults[1].valid).toBe(true);
+    }
   });
 });

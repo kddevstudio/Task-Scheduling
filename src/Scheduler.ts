@@ -18,66 +18,95 @@ export class Scheduler {
         this.volatileTaskRepository = new VolatileTaskRepository(this.taskRepository);
     }
 
+    private getBounds(task: Task){
+        // tslint:disable-next-line:max-line-length
+        let predecessorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getPredecessorDependencies(task.id);
+        // tslint:disable-next-line:max-line-length
+        
+        let maxStartDate: Date | null = null;
+        let minEndDate: Date | null = null;
+
+        if(predecessorDependencies.any()) {
+            // tslint:disable-next-line:max-line-length
+            let startPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.where(dependency => dependency.type === DependencyType.FinishStart || dependency.type === DependencyType.StartStart);
+            let finishPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.except(startPredecessors);
+
+            //let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
+
+            // tslint:disable-next-line:max-line-length
+            if(startPredecessors.any()) {
+                maxStartDate = startPredecessors.select(dependency => {
+                    let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
+                    return predecessorTask ? dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start : null;
+                }).max();
+            }
+            
+            // tslint:disable-next-line:max-line-length
+            if(finishPredecessors.any()) {
+                minEndDate = finishPredecessors.select(dependency => {
+                    let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
+                    return predecessorTask ? dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start : null;
+                }).min();
+            }
+        }
+
+        return {
+            start: maxStartDate,
+            end: minEndDate
+        };
+    }
+
     // tslint:disable-next-line:max-line-length
     move(sender: TaskActionSource = TaskActionSource.User, task: Task, taskMoveResults: TaskMoveResult[] ): Promise<TaskMoveResult[]> {
 
         if(taskMoveResults.length){
             this.volatileTaskRepository.addRange(taskMoveResults);
         }
-                
+             
         return new Promise((resolve, reject) => {
             
-            // tslint:disable-next-line:max-line-length
-            let predecessorDependencies: Ix.Enumerable<Dependency> = this.taskRepository.getPredecessorDependencies(task.id);
-            // tslint:disable-next-line:max-line-length
-            
-            let maxStartDate: Date | null = null;
-            let minEndDate: Date | null = null;
-
-            if(predecessorDependencies.any()) {
-                // tslint:disable-next-line:max-line-length
-                let startPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.where(dependency => dependency.type === DependencyType.FinishStart || dependency.type === DependencyType.StartStart);
-                let finishPredecessors: Ix.Enumerable<Dependency> = predecessorDependencies.except(startPredecessors);
-
-                //let volatileTaskRepository: VolatileTaskRepository = new VolatileTaskRepository(this.taskRepository, taskMoveResults);
-
-                // tslint:disable-next-line:max-line-length
-                if(startPredecessors.any()) {
-                    maxStartDate = startPredecessors.select(dependency => {
-                        let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
-                        return predecessorTask ? dependency.type == DependencyType.FinishStart ? predecessorTask.end : predecessorTask.start : null;
-                    }).max();
-                }
-                
-                // tslint:disable-next-line:max-line-length
-                if(finishPredecessors.any()) {
-                    minEndDate = finishPredecessors.select(dependency => {
-                        let predecessorTask: Task | null = this.volatileTaskRepository.get(dependency.predecessorId);
-                        return predecessorTask ? dependency.type == DependencyType.FinishFinish ? predecessorTask.end : predecessorTask.start : null;
-                    }).min();
-                }
-            }
-
             let taskMoveResult: TaskMoveResult | null = null;
 
+            // find available task schedule 'window'
+            const scheduleWindow = this.getBounds(task);
+
+            // determine whether the tasks current schedule is outwith the window
+            const startOutwithBounds = scheduleWindow.start ? scheduleWindow.start > task.start : false;
+            const endOutwithBounds = scheduleWindow.end ? scheduleWindow.end < task.end : false;
+
+            if((startOutwithBounds && scheduleWindow.end) || (endOutwithBounds && scheduleWindow.start)){
+                // there is a defined window available for the task;  does it accommodate the task duration?
+                let message: string = `Task {task.name} cannot be scheduled within between {scheduleWindow.start} and {scheduleWindow.end}`;
+                taskMoveResult = new TaskMoveResult(false, task, message);
+                taskMoveResults.unshift(taskMoveResult);
+                reject(taskMoveResults);
+                return;
+            }
+
             // determine whether the task needs to be scheduled later
-            if(maxStartDate) {
-                taskMoveResult = this.checkConstraint(task, new Schedule(maxStartDate, task.duration));
+            if(scheduleWindow.start) {
+                taskMoveResult = this.checkConstraint(task, new Schedule(scheduleWindow.start, task.duration));
             }
 
             // determine whether the task needs to be scheduled earlier
-            if(minEndDate) {
-                taskMoveResult = this.checkConstraint(task, new Schedule(minEndDate, task.duration, StartOrEnd.End));
+            if(scheduleWindow.end) {
+                taskMoveResult = this.checkConstraint(task, new Schedule(scheduleWindow.end, task.duration, StartOrEnd.End));
             }
 
             let promisesArray: Array<Promise<TaskMoveResult[]>> = [];
 
-            if(taskMoveResult) {
+            if(!taskMoveResult) {
+                // task is free to move to any date
+                resolve(taskMoveResults);
+            }
+            else {
+
                 // append taskMoveResult to array of updated tasks
                 taskMoveResults.unshift(taskMoveResult);
 
                 if(!taskMoveResult.valid) {
                     reject(taskMoveResults);
+                    return;
                 }
                 // tslint:disable-next-line:one-line
                 else {
@@ -122,10 +151,6 @@ export class Scheduler {
                         resolve(taskMoveResults);
                     });
                 }
-            }
-            // tslint:disable-next-line:one-line
-            else {
-                resolve(taskMoveResults);
             }
         });
     }
