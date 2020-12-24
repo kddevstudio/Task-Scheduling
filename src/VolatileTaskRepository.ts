@@ -3,7 +3,6 @@ import { Dependency }  from "./models/Dependency";
 import * as Ix from "ix";
 import { ITaskRepository } from "./ITaskRepository";
 import { TaskMoveResult } from "./Scheduler";
-import { tsTypeAliasDeclaration } from "@babel/types";
 
 export class VolatileTaskRepository implements ITaskRepository {
     
@@ -20,16 +19,16 @@ export class VolatileTaskRepository implements ITaskRepository {
         taskMoveResults.forEach(taskMoveResult => this.add(taskMoveResult));
     }
 
-    private add(taskMoveResult: TaskMoveResult)
+    public add(taskMoveResult: TaskMoveResult)
     {
-        let taskMoveResultIndex = this.taskMoveResultIndexMap[taskMoveResult.task.id];
+        let taskMoveResultCardinalIndex = this.taskMoveResultIndexMap[taskMoveResult.task.id];
 
-        if(taskMoveResultIndex){
-            this.taskMoveResults[taskMoveResultIndex] = taskMoveResult
+        if(taskMoveResultCardinalIndex){
+            this.taskMoveResults[taskMoveResultCardinalIndex-1] = taskMoveResult;
         }
         else{
-            taskMoveResultIndex = this.taskMoveResults.push(taskMoveResult);
-            this.taskMoveResultIndexMap[taskMoveResult.task.id] = taskMoveResultIndex;
+            taskMoveResultCardinalIndex = this.taskMoveResults.push(taskMoveResult);
+            this.taskMoveResultIndexMap[taskMoveResult.task.id] = taskMoveResultCardinalIndex;
         }
     }
 
@@ -41,6 +40,11 @@ export class VolatileTaskRepository implements ITaskRepository {
         }
 
         return task;
+    }
+
+    public getVolatileTaskResults(): TaskMoveResult[]
+    {
+        return [...this.taskMoveResults].reverse();
     }
 
     public hasTask(taskId: number){

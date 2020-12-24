@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest --"
   },
   "repository": {
     "type": "git",
@@ -23,8 +23,8 @@
     "typescript": "^3.3.3333"
   },
   "devDependencies": {
-    "@types/jest": "24.0.9",
-    "jest": "^24.1.0",
-    "ts-jest": "^24.0.0"
+    "@types/jest": "*",
+    "jest": "*",
+    "ts-jest": "^26.4.3"
   }
 }

@@ -11,11 +11,10 @@ import { Constraint } from "../src/models/Constraint";
 import { ITaskRepository } from "../src/ITaskRepository";
 import { TaskRepository } from "../src/TaskRepository";
 import { TaskActionSource } from "../src/TaskActionSource";
-import { catchClause } from "@babel/types";
 
 let start: Date = new Date(2018, 10, 15);
 let duration: number = 4;
-const task: Task = new Task("", start, duration);
+const task: Task = new Task("", new Schedule(start, duration));
 
 let taskRepository: ITaskRepository | null;
 let sut: Scheduler | null;
@@ -25,7 +24,7 @@ describe("Constraint operations:", () => {
   beforeEach(() => {
     task.start = start;
     task.duration = duration;
-    taskRepository = new TaskRepository([task], null);
+    taskRepository = new TaskRepository([task]);
     sut = new Scheduler(taskRepository);
   });
 
@@ -232,7 +231,7 @@ describe("Constraint operations:", () => {
       const taskMoveResult: TaskMoveResult = sut.checkConstraint(task, schedule);
 
       expect(taskMoveResult.valid).toBe(false);
-      expect(taskMoveResult.task.end.getTime()).toBeLessThan(task.constraint.date.getTime());      
+      expect(taskMoveResult.task.end.getTime()).toBeLessThan(task.constraint.date.getTime());
     });
 
     // exact
@@ -317,8 +316,8 @@ describe("Dependency traversal:", () => {
   task.start = start;
   task.duration = duration;
 
-  let predecessor1: Task = new Task("", new Date(2018, 10, 15), duration);
-  let predecessor2: Task = new Task("", start, duration);
+  let predecessor1: Task = new Task("", new Schedule(new Date(2018, 10, 15), duration));
+  let predecessor2: Task = new Task("", new Schedule(start, duration));
 
   predecessor1.id = 1;
   predecessor2.id = 2;
@@ -340,16 +339,15 @@ describe("Dependency traversal:", () => {
     test("Successor-NoConstraint", async () => {
       task.name = "Successor-NoConstraint";
 
-      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+      // tslint:disable-next-line:max-line-length
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-      expect(taskMoveResults.length).toBe(2);
-      
+      expect(taskMoveResults.length).toBe(1);
+
       expect(taskMoveResults[0].valid).toBe(true);
-      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
-      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
+
+      expect(taskMoveResults[0].task.start).toStrictEqual(predecessor1.end);
       expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
-      
-      expect(taskMoveResults[1].valid).toBe(true);
     });
 
     // mustStartBefore
@@ -363,15 +361,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
-        
+        expect(taskMoveResults.length).toBe(1);
+
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
-
-        expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
-        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
         expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
@@ -385,18 +379,18 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
           expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
-  
+
         }
       });
 
@@ -410,18 +404,18 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
           expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
-  
+
         }
       });
     });
@@ -438,18 +432,18 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
           expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
-  
+
         }
       });
 
@@ -461,11 +455,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -481,13 +475,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, task.start);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -508,13 +502,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -531,13 +525,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -553,11 +547,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartAfter, task.start);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -576,11 +570,10 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -597,13 +590,12 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -621,13 +613,12 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -648,13 +639,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -670,11 +660,10 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -690,13 +679,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -717,13 +705,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -740,13 +727,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
         catch (taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -762,11 +748,10 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
@@ -781,7 +766,6 @@ describe("Dependency traversal:", () => {
       // reset task using the specified start date which will calculate the end date, then set start to the end date.
       task.start = start;
       task.start = task.end;
-      
       task.constraint = null;
 
       let dependency1: Dependency = new Dependency(1, 3, DependencyType.FinishFinish);
@@ -791,15 +775,14 @@ describe("Dependency traversal:", () => {
       sut = new Scheduler(taskRepository);
     });
 
-    // task move according to predecessor, FF, no constraint
+    //     // task move according to predecessor, FF, no constraint
     test("Successor-NoConstraint", async () => {
       task.name = "Successor-NoConstraint";
-      
-      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
 
-      expect(taskMoveResults.length).toBe(2);
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
+
+      expect(taskMoveResults.length).toBe(1);
       expect(taskMoveResults[0].valid).toBe(true);
-      expect(taskMoveResults[1].valid).toBe(true);
 
       expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
       expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -817,11 +800,10 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -838,13 +820,12 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -862,13 +843,12 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -889,13 +869,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -911,11 +890,10 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -931,13 +909,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -958,13 +935,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -981,13 +957,12 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1003,11 +978,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1026,11 +1001,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1047,13 +1022,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1071,13 +1046,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1098,13 +1073,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1120,11 +1095,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1140,14 +1115,14 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
-          
+
+
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
           expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
@@ -1168,13 +1143,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1191,13 +1166,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1213,11 +1188,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1231,7 +1206,7 @@ describe("Dependency traversal:", () => {
     beforeEach(() => {
       // reset task using the specified start date which will calculate the end date, then set start to the end date.
       task.end = start;
-      
+
       task.constraint = null;
 
       let dependency1: Dependency = new Dependency(1, 3, DependencyType.StartStart);
@@ -1244,12 +1219,11 @@ describe("Dependency traversal:", () => {
     // task move according to predecessor, FF, no constraint
     test("Successor-NoConstraint", async () => {
       task.name = "Successor-NoConstraint";
-      
-      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
 
-      expect(taskMoveResults.length).toBe(2);
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
+
+      expect(taskMoveResults.length).toBe(1);
       expect(taskMoveResults[0].valid).toBe(true);
-      expect(taskMoveResults[1].valid).toBe(true);
 
       expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
       expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1267,11 +1241,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1288,13 +1262,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1312,13 +1286,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1339,13 +1313,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1361,11 +1335,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1381,13 +1355,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1408,13 +1382,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1431,13 +1405,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1453,11 +1427,12 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        // tslint:disable-next-line:max-line-length
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1476,11 +1451,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1497,13 +1472,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1521,13 +1496,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1548,13 +1523,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1570,11 +1545,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1590,13 +1565,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1617,13 +1592,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1640,13 +1615,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1662,11 +1637,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
@@ -1692,16 +1667,11 @@ describe("Dependency traversal:", () => {
     // task move according to predecessor, FF, no constraint
     test("Successor-NoConstraint", async () => {
       task.name = "Successor-NoConstraint";
-      
-      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
 
-      expect(taskMoveResults.length).toBe(2);
+      const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
+
+      expect(taskMoveResults.length).toBe(1);
       expect(taskMoveResults[0].valid).toBe(true);
-      expect(taskMoveResults[1].valid).toBe(true);
-
-      expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
-      expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
-      expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
     });
 
     // mustStartBefore
@@ -1715,11 +1685,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1736,13 +1706,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1760,13 +1730,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1787,13 +1757,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1809,11 +1779,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1829,13 +1799,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1856,13 +1826,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1879,13 +1849,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1901,11 +1871,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustStartAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1924,11 +1894,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndBefore, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1945,13 +1915,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1969,13 +1939,13 @@ describe("Dependency traversal:", () => {
 
         // use try/catch to capture rejected promises
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -1996,13 +1966,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -2018,14 +1988,14 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
-        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(),15));
+        expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
         expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
       });
 
@@ -2038,13 +2008,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndOn, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -2065,13 +2035,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -2088,13 +2058,13 @@ describe("Dependency traversal:", () => {
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
         try {
-          await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+          await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
         }
         // tslint:disable-next-line:one-line
-        catch(taskMoveResults) {
-          expect(taskMoveResults.length).toBe(2);
+        catch (taskMoveResults) {
+          expect(taskMoveResults.length).toBe(1);
           expect(taskMoveResults[0].valid).toBe(false);
-          expect(taskMoveResults[1].valid).toBe(true);
+
 
           expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
           expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -2110,11 +2080,11 @@ describe("Dependency traversal:", () => {
 
         task.constraint = new Constraint(ConstraintType.MustEndAfter, constraintDate);
 
-        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+        const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
 
-        expect(taskMoveResults.length).toBe(2);
+        expect(taskMoveResults.length).toBe(1);
         expect(taskMoveResults[0].valid).toBe(true);
-        expect(taskMoveResults[1].valid).toBe(true);
+
 
         expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 11));
         expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 15));
@@ -2124,13 +2094,14 @@ describe("Dependency traversal:", () => {
   });
 });
 
-describe("woo", () => {
+describe("Predecessor Constraints", () => {
 
   task.start = start;
   task.duration = duration;
+  task.constraint = null;
 
-  let predecessor1: Task = new Task("", new Date(2018, 10, 16), duration);
-  let predecessor2: Task = new Task("", start, duration);
+  let predecessor1: Task = new Task("", new Schedule(new Date(2018, 10, 16), duration));
+  let predecessor2: Task = new Task("", new Schedule(start, duration));
 
   predecessor1.id = 1;
   predecessor2.id = 2;
@@ -2146,21 +2117,132 @@ describe("woo", () => {
 
   });
 
-  test("", async () => {
-    task.name = "";
+  test("Duration exceeds available timespan", async () => {
+    task.name = "BetweenTwoPredecessors";
 
-    try{
-      await sut.move(TaskActionSource.User, task, [new TaskMoveResult(true, predecessor1, "")]);
+    try {
+      await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
     }
-    catch(taskMoveResults){
-      expect(taskMoveResults.length).toBe(2);
-    
+    catch (taskMoveResults) {
+      expect(taskMoveResults.length).toBe(1);
+
       expect(taskMoveResults[0].valid).toBe(false);
-      // expect(taskMoveResults[0].task.start).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 19));
-      // expect(taskMoveResults[0].task.end).toStrictEqual(new Date(start.getFullYear(), start.getMonth(), 23));
-      // expect(taskMoveResults[0].task.duration).toStrictEqual(task.duration);
-      
-      // expect(taskMoveResults[1].valid).toBe(true);
+      expect(taskMoveResults[0].message).toEqual(`Task ${task.name} cannot be scheduled between ${predecessor1.start} and ${predecessor2.end}`);
     }
   });
+
+  test("Duration equals available timespan", async () => {
+    task.name = "BetweenTwoPredecessors";
+    task.duration = 3;
+
+    var taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, new Schedule(predecessor1.start, predecessor1.end));
+    expect(taskMoveResults.length).toBe(1);
+    expect(taskMoveResults[0].valid).toBe(true);
+
+  });
+
+});
+
+describe("Child Traversal", () => {
+
+  let childTask: Task;
+
+  beforeEach(() => {
+
+    task.start = start;
+    task.duration = duration;
+
+    childTask = new Task("Child Task", new Schedule(start, duration));
+    childTask.id = 4;
+    childTask.parentId = 3;
+    task.childTasks.push(childTask);
+
+    task.name = "Parent";
+
+    taskRepository = new TaskRepository([task, childTask], []);
+    sut = new Scheduler(taskRepository);
+  });
+
+  test("Child Task, ok", async () => {
+
+    let newSchedule = new Schedule(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1), task.duration);
+    const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, task, newSchedule);
+
+    expect(taskMoveResults.length).toBe(2);
+
+    expect(taskMoveResults[0].task.name).toBe(childTask.name);
+    expect(taskMoveResults[0].task.start).toBe(newSchedule.start);
+
+    expect(taskMoveResults[1].task.name).toBe(task.name);
+    expect(taskMoveResults[1].task.start).toBe(newSchedule.start);
+  });
+
+  test("Child Task, fail", async () => {
+
+    // tslint:disable-next-line:max-line-length
+    let newSchedule: Schedule = new Schedule(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1), task.duration);
+
+    childTask.constraint = new Constraint(ConstraintType.MustStartOn, childTask.start);
+
+    try {
+      await sut.move(TaskActionSource.User, task, newSchedule);
+    }
+    // tslint:disable-next-line:one-line
+    catch (taskMoveResults) {
+
+      expect(taskMoveResults.length).toBe(2);
+
+      // tslint:disable-next-line:max-line-length
+      const expectedMessage: string = `Task ${taskMoveResults[0].task.name} would start on ${taskMoveResults[0].task.start} but must start on ${taskMoveResults[0].task.constraint.date}`;
+
+      console.log(expectedMessage);
+
+      expect(taskMoveResults[0].task.name).toBe(childTask.name);
+      expect(taskMoveResults[0].task.start).toBe(newSchedule.start);
+      expect(taskMoveResults[0].valid).toBe(false);
+      expect(taskMoveResults[0].message).toBe(expectedMessage);
+
+      expect(taskMoveResults[1].task.name).toBe(task.name);
+      expect(taskMoveResults[1].task.start).toBe(newSchedule.start);
+      expect(taskMoveResults[1].valid).toBe(false);
+    }
+  });
+});
+
+describe("Parent Traversal", () => {
+
+  let childTask: Task;
+  
+  beforeEach(() => {
+
+    task.name = "Parent";
+    task.start = start;
+    task.duration = duration;
+  
+    childTask = new Task("Child Task", new Schedule(start, duration));
+    childTask.id = 4;
+    childTask.parentId = 3;
+    task.childTasks.push(childTask);
+
+    taskRepository = new TaskRepository([task, childTask], []);
+    sut = new Scheduler(taskRepository);
+  });
+
+  test("", async () => {      // tslint:disable-next-line:max-line-length
+    let newSchedule: Schedule = new Schedule(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1), new Date(task.end.getFullYear(), task.end.getMonth(), task.end.getDate() + 1));
+
+    const taskMoveResults: TaskMoveResult[] = await sut.move(TaskActionSource.User, childTask, newSchedule);
+
+    // correct number of results
+    expect(taskMoveResults.length).toBe(2);
+
+    // tasks are in correct order
+    expect(taskMoveResults[0].task.name).toBe("Parent");
+    expect(taskMoveResults[1].task.name).toBe("Child Task");
+
+    // parent task has been moved to correct date
+    expect(taskMoveResults[0].task.start).toBe(newSchedule.start);
+    expect(taskMoveResults[0].task.end).toBe(newSchedule.end);
+  });
+
 });

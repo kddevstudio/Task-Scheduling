@@ -2,41 +2,42 @@ import "ts-jest";
 import { Task } from "../src/models/Task";
 import {TaskRepository} from "../src/TaskRepository";
 import { Dependency } from "../src/models/Dependency";
+import {Schedule } from "../src/models/Schedule";
 
 const tasks: Task[] = [];
 const duration: number = 1;
 const startDate: Date = new Date();
 
-const project: Task = new Task("Project", startDate, duration);
+const project: Task = new Task("Project", new Schedule(startDate, duration));
 project.id = 1;
 tasks.push(project);
 
-const alpha: Task = new Task("Alpha", startDate, duration);
+const alpha: Task = new Task("Alpha", new Schedule(startDate, duration));
 alpha.id = 2;
 alpha.parentId = 1;
 tasks.push(alpha);
 
-const a1: Task = new Task("A1", startDate, duration);
+const a1: Task = new Task("A1", new Schedule(startDate, duration));
 a1.id = 3;
 a1.parentId = 2;
 tasks.push(a1);
 
-const a2: Task = new Task("A2", startDate, duration);
+const a2: Task = new Task("A2", new Schedule(startDate, duration));
 a2.id = 4;
 a2.parentId = 2;
 tasks.push(a2);
 
-const beta: Task = new Task("Beta", startDate, duration);
+const beta: Task = new Task("Beta", new Schedule(startDate, duration));
 beta.parentId = 1;
 beta.id = 5;
 tasks.push(beta);
 
-const b1: Task = new Task("B1", startDate, duration);
+const b1: Task = new Task("B1", new Schedule(startDate, duration));
 b1.id = 6;
 b1.parentId = 5;
 tasks.push(b1);
 
-const b2: Task = new Task("B2", startDate, duration);
+const b2: Task = new Task("B2", new Schedule(startDate, duration));
 b2.id = 7;
 b2.parentId = 5;
 tasks.push(b2);

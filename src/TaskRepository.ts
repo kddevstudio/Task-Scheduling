@@ -7,7 +7,7 @@ export class TaskRepository implements ITaskRepository {
     private taskEnumerable: Ix.Enumerable<Task>;
     private dependencyEnumerable: Ix.Enumerable<Dependency>;
 
-    constructor(tasks: Array<Task>, dependencies: Array<Dependency>) {
+    constructor(tasks: Array<Task>, dependencies?: Array<Dependency>) {
         this.taskEnumerable = Ix.Enumerable.fromArray(tasks);
         this.dependencyEnumerable = dependencies ? Ix.Enumerable.fromArray(dependencies) : Ix.Enumerable.empty();
     }
