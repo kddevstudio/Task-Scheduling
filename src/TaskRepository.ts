@@ -16,13 +16,13 @@ export class TaskRepository implements ITaskRepository {
         return this.taskEnumerable;
     }
     
-    public get(taskId: number): Task | null {
+    public get(taskId: number): Task | undefined {
         return this.taskEnumerable.where(task => task.id === taskId).firstOrDefault();
     }
 
-    public getParent(taskId: number): Task | null {
+    public getParent(taskId: number): Task | undefined {
         let task = this.get(taskId);
-        let parentTask: Task | null = null;
+        let parentTask: Task | undefined;
         if(task && task.parentId){
             parentTask = this.get(task.parentId);
         }

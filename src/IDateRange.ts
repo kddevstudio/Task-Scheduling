@@ -1,4 +1,4 @@
 export interface IDateRange {
-    start: Date | null;
-    end: Date | null;
+    start: Date | undefined;
+    end: Date | undefined;
 }
