@@ -192,8 +192,9 @@ export class Scheduler {
                 taskMoveResult = this.checkConstraint(volatileTask, new Schedule(volatileTask.end, volatileTask.duration, StartOrEnd.End));
             }
             
-            // create a new taskMoveResult if not already present
-            taskMoveResult = taskMoveResult || new TaskMoveResult(true, { start: volatileTask.start, end: volatileTask.end });
+            if(taskMoveResult == undefined){
+                taskMoveResult = new TaskMoveResult(true, { start: volatileTask.start, end: volatileTask.end });
+            }
 
             // append taskMoveResult to array of updated tasks
             this.volatileTaskRepository.add(volatileTask.id, taskMoveResult);
@@ -268,7 +269,7 @@ export class Scheduler {
                         //     promiseResultEnumerable.forEach(newTaskMoveResult => this.volatileTaskRepository.add(newTaskMoveResult));
                         // }
 
-                        // taskMoveResult = taskMoveResult || new TaskMoveResult(true, volatileTask);
+                        taskMoveResult = taskMoveResult || new TaskMoveResult(true, volatileTask);
 
                         taskMoveResult.valid = taskMoveResult.valid && promiseResultEnumerable.all(result => result);
 
@@ -281,7 +282,7 @@ export class Scheduler {
                         return;
                     })
                     .catch(badTaskMoveResults => {
-                        if(taskMoveResult !== null){
+                        if(taskMoveResult !== undefined){
                             taskMoveResult.valid = false;
                         }
                         

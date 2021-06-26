@@ -1,5 +1,3 @@
-import { TaskMoveResult } from './../src/Scheduler';
-
 import "ts-jest";
 import { Dependency } from "../src/models/Dependency";
 import { DependencyType } from "../src/DependencyType";
@@ -17,8 +15,8 @@ let start: Date = new Date(2018, 10, 15);
 let duration: number = 4;
 const task: Task = new Task("", new Schedule(start, duration));
 
-let taskRepository: ITaskRepository | null;
-let sut: Scheduler | null;
+let taskRepository: ITaskRepository;
+let sut: Scheduler;
 
 describe("Constraint operations:", () => {
 
