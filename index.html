@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <link rel="stylesheet" href="lib/kendoui.for.jquery.2020.3.915.commercial/styles/kendo.common.min.css" />
-        <link rel="stylesheet" href="lib/kendoui.for.jquery.2020.3.915.commercial/styles/kendo.default.min.css" />
-        <script src="lib/kendoui.for.jquery.2020.3.915.commercial/js/jquery.min.js"></script>
-        <script src="lib/kendoui.for.jquery.2020.3.915.commercial/js/kendo.all.min.js"></script>
+        <title>Kendo Gannt Test</title>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.914/styles/kendo.common.min.css" crossorigin="anonymous"/>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2021.3.914/styles/kendo.default.min.css" crossorigin="anonymous" />
+        <script src="https://kendo.cdn.telerik.com/2021.3.914/js/jquery.min.js" crossorigin="anonymous"></script>
+        <script src="https://kendo.cdn.telerik.com/2021.3.914/js/kendo.all.min.js" crossorigin="anonymous"></script>
         
-        <script src="dist/Scheduler.js" type="module"></script>
-        <script src="dist/TaskRepository.js" type="module"></script>
+        <script src="./node_modules/ix/Ix.dom.es5.min.js"></script>
+        <script src="./dist/Scheduler.js" type="module"></script>
+        <script src="./dist/TaskRepository.js" type="module"></script>
         <style>
             #grid{
                 height: 800px;
@@ -114,6 +116,7 @@
                     console.dir(e);
                 },
                 moveEnd: function(e){
+                    console.dir(e.task.task.title);
                     console.log(`Moving task ${e.task.TaskID} from ${e.task.start} to ${e.start}`);
                     var taskRepository = new TaskRepository(tasksDataSource.data(), dependenciesDataSource.data());
                     var scheduler = new Scheduler(taskRepository);
