@@ -12,7 +12,7 @@
     "url": "git+https://github.com/kddevstudio/Task-Scheduling.git"
   },
   "author": "",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/kddevstudio/Task-Scheduling/issues"
   },
